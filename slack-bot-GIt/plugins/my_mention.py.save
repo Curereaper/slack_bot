@@ -1,0 +1,35 @@
+# coding: utf-8
+
+from slackbot.bot import respond_to     # @botname: で反応するデコーダ
+from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
+from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
+import hashlib
+import datetime
+from slacker import Slacker
+
+count = 93
+token = 'xoxp-11434739602-370656126675-848025921075-e6d44068c930e9502c3aa8bb46bde3ed'
+slack = Slacker(token)
+channel = 'CRCQBMAGP'
+#channel = 'UAWKA3QKV'
+
+@respond_to(r'.+')
+def all_respond_func(message):
+    text = message.body['text']     # メッセージを取り出す
+    # 送信メッセージを作る。改行やトリプルバッククォートで囲む表現も可能
+    msg = '匿名で投稿しました。\n```' + text + '```'
+    message.reply(msg)      # メンション
+
+    user_id = message.body['user']
+    hashed_id = hashlib.md5((str(datetime.date.today()) + user_id).encode()).hexdigest()[:9]
+
+    global count
+    count += 1
+    if count > 1000:
+            count = 0
+    message_id = count
+
+    title_template = "{message_id}：以下、VIPにかわりまして名無しがお送りします ID:{hashed_id}"
+    username = title_template.format(message_id=message_id, hashed_id=hashed_id)
+
+    slack.chat.post_message(channel,text,username,icon_emoji=":tsubo:")
